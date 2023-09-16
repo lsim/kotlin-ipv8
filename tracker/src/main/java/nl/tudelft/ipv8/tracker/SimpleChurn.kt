@@ -1,6 +1,6 @@
 package nl.tudelft.ipv8.tracker
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import nl.tudelft.ipv8.Overlay
 import nl.tudelft.ipv8.peerdiscovery.strategy.DiscoveryStrategy
 import java.util.*
@@ -8,7 +8,7 @@ import java.util.*
 private val logger = KotlinLogging.logger {}
 
 class SimpleChurn(
-    private val overlay: Overlay
+    private val overlay: Overlay,
 ) : DiscoveryStrategy {
     override fun takeStep() {
         synchronized(overlay.network.graphLock) {
@@ -21,7 +21,7 @@ class SimpleChurn(
         }
     }
 
-    class Factory: DiscoveryStrategy.Factory<SimpleChurn>() {
+    class Factory : DiscoveryStrategy.Factory<SimpleChurn>() {
         override fun create(): SimpleChurn {
             return SimpleChurn(getOverlay())
         }

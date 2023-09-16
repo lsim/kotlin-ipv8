@@ -1,6 +1,6 @@
 package nl.tudelft.ipv8.tracker
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import nl.tudelft.ipv8.*
 import nl.tudelft.ipv8.keyvault.defaultCryptoProvider
 import nl.tudelft.ipv8.messaging.EndpointAggregator
@@ -43,18 +43,23 @@ class TrackerCommunity : Community() {
     private fun onGenericIntroductionRequest(
         peer: Peer,
         payload: IntroductionRequestPayload,
-        prefix: ByteArray
+        prefix: ByteArray,
     ) {
-        logger.debug("<- $payload")
+        logger.debug { "<- $payload" }
 
         // In case this is the first time the peer contacts a tracker, try to estimate their WAN
         // so we can already send a puncture request in this round
         val sourceWanAddress = if (payload.sourceWanAddress.isEmpty() &&
-            !addressIsLan(peer.address)) peer.address else payload.sourceWanAddress
+            !addressIsLan(peer.address)
+        ) {
+            peer.address
+        } else {
+            payload.sourceWanAddress
+        }
 
         val newPeer = peer.copy(
             lanAddress = payload.sourceLanAddress,
-            wanAddress = sourceWanAddress
+            wanAddress = sourceWanAddress,
         )
         addVerifiedPeer(newPeer)
 
@@ -66,7 +71,7 @@ class TrackerCommunity : Community() {
             newPeer,
             payload.identifier,
             introduction = introPeer,
-            prefix = prefix
+            prefix = prefix,
         )
 
         send(peer.address, packet)
@@ -77,16 +82,16 @@ class TrackerService {
     fun startTracker(port: Int) {
         val endpoint = EndpointAggregator(
             UdpEndpoint(port, InetAddress.getByName("0.0.0.0")),
-            null
+            null,
         )
 
         val config = IPv8Configuration(
             overlays = listOf(
                 OverlayConfiguration(
                     Overlay.Factory(TrackerCommunity::class.java),
-                    walkers = listOf(SimpleChurn.Factory())
-                )
-            )
+                    walkers = listOf(SimpleChurn.Factory()),
+                ),
+            ),
         )
 
         val key = defaultCryptoProvider.generateKey()
